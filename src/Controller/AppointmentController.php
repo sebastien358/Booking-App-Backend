@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Appointment;
 use App\Entity\Category;
 use App\Form\AppointmentType;
-use App\Repository\AppointmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/appointment')]
 class AppointmentController extends AbstractController
@@ -27,10 +27,24 @@ class AppointmentController extends AbstractController
         $this->logger = $logger;
     }
 
-    #[Route('/calendar', methods: ['GET'])]
-    public function list(AppointmentRepository $repo): JsonResponse
+    #[Route('/list', methods: ['GET'])]
+    public function list(SerializerInterface $serializer): JsonResponse
     {
-        $appointments = $repo->findAll();
+        try {
+            $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointments();
+
+            $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
+            return new JsonResponse($dataAppointments);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/calendar', methods: ['GET'])]
+    public function calendar(): JsonResponse
+    {
+        $appointments = $this->entityManager->getRepository(Appointment::class)->findAll();
 
         $data = array_map(fn($a) => [
             'start' => $a->getDatetime()->format('Y-m-d\TH:i:s'),

@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\AppointmentRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: AppointmentRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -12,24 +13,31 @@ class Appointment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['appointments', 'appointment'])]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups(['appointments', 'appointment'])]
     private ?\DateTimeImmutable $datetime = null;
 
     #[ORM\Column(length: 125)]
+    #[Groups(['appointments', 'appointment'])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 125)]
+    #[Groups(['appointments', 'appointment'])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['appointments', 'appointment'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 60)]
+    #[Groups(['appointments', 'appointment'])]
     private ?string $phone = null;
 
     #[ORM\Column(nullable: false)]
+    #[Groups(['appointments', 'appointment'])]
     private bool $is_read = false;
 
     #[ORM\Column(nullable: false)]
