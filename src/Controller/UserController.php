@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/user')]
+#[Route('/api/user')]
 class UserController extends AbstractController
 {
     private LoggerInterface $logger;

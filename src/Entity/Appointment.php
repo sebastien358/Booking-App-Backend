@@ -29,17 +29,19 @@ class Appointment
     #[ORM\Column(length: 60)]
     private ?string $phone = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?bool $is_read = null;
+    #[ORM\Column(nullable: false)]
+    private bool $is_read = false;
 
     #[ORM\Column(nullable: false)]
     private ?\DateTimeImmutable $created_at = null;
+
+    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'appointments')]
+    private ?Category $category = null;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
         $this->created_at = new \DateTimeImmutable();
-
     }
 
     public function getId(): ?int
@@ -127,6 +129,18 @@ class Appointment
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): static
+    {
+        $this->category = $category;
 
         return $this;
     }

@@ -4,6 +4,9 @@ namespace App\Form;
 
 use App\Entity\Appointment;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -15,14 +18,10 @@ class AppointmentType extends AbstractType
             ->add('datetime', null, [
                 'widget' => 'single_text',
             ])
-            ->add('firstname')
-            ->add('lastname')
-            ->add('email')
-            ->add('phone')
-            ->add('is_read')
-            ->add('created_at', null, [
-                'widget' => 'single_text',
-            ])
+            ->add('firstname', TextType::class)
+            ->add('lastname', TextType::class)
+            ->add('email', EmailType::class)
+            ->add('phone', TelType::class)
         ;
     }
 
@@ -30,6 +29,8 @@ class AppointmentType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Appointment::class,
+            'csrf_protection' => false,
+            'allow_extra_fields' => true,
         ]);
     }
 }
