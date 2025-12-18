@@ -42,6 +42,13 @@ class AppointmentController extends AbstractController
                 return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
             }
 
+            $date = new \DateTimeImmutable($data['datetime']);
+
+            $dateTime = $this->entityManager->getRepository(Appointment::class)->findOneBy(['datetime' => $date]);
+            if ($dateTime) {
+                return new JsonResponse(['type' => 'DATETIME_ALREADY_TAKEN', 'error' => 'Ce créneau est déjà réservé'], Response::HTTP_CONFLICT);
+            }
+
             $category = $this->entityManager->getRepository(Category::class)->find($data['category_id']);
             if (!$category) {
                 return new JsonResponse(['error' => 'Category not found'], Response::HTTP_BAD_REQUEST);
