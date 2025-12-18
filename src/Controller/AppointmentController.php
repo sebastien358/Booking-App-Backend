@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Appointment;
 use App\Entity\Category;
 use App\Form\AppointmentType;
+use App\Repository\AppointmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,20 @@ class AppointmentController extends AbstractController
     {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+    }
+
+    #[Route('/calendar', methods: ['GET'])]
+    public function list(AppointmentRepository $repo): JsonResponse
+    {
+        $appointments = $repo->findAll();
+
+        $data = array_map(fn($a) => [
+            'start' => $a->getDatetime()->format('Y-m-d\TH:i:s'),
+            'end'   => $a->getDatetime()->modify('+30 minutes')->format('Y-m-d\TH:i:s'),
+            'display' => 'background', // important
+        ], $appointments);
+
+        return new JsonResponse($data);
     }
 
     #[Route('/create', methods: ['POST'])]
