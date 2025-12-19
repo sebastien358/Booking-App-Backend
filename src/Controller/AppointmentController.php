@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Appointment;
 use App\Entity\Category;
+use App\Entity\Service;
 use App\Form\AppointmentType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -78,12 +79,12 @@ class AppointmentController extends AbstractController
                 return new JsonResponse(['type' => 'DATETIME_ALREADY_TAKEN', 'error' => 'Ce créneau est déjà réservé'], Response::HTTP_CONFLICT);
             }
 
-            $category = $this->entityManager->getRepository(Category::class)->find($data['category_id']);
-            if (!$category) {
-                return new JsonResponse(['error' => 'Category not found'], Response::HTTP_BAD_REQUEST);
+            $serviceId = $this->entityManager->getRepository(Service::class)->find($data['service_id']);
+            if (!$serviceId) {
+                return new JsonResponse(['error' => 'Service innexistant'], Response::HTTP_BAD_REQUEST);
             }
 
-            $appointment->setCategory($category);
+            $appointment->setService($serviceId);
 
             $this->entityManager->persist($appointment);
             $this->entityManager->flush();

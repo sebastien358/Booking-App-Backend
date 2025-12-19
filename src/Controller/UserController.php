@@ -19,6 +19,7 @@ class UserController extends AbstractController
         $this->logger = $logger;
     }
 
+    #[Route('/me', methods: ['GET'])]
     public function me(SerializerInterface $serializer): JsonResponse
     {
         try {

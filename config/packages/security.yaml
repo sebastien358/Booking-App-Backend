@@ -27,6 +27,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/admin/appointment, roles: ROLE_ADMIN }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
 
     role_hierarchy:

@@ -25,13 +25,13 @@ class Category
     #[Groups(['categories'])]
     private ?string $slug = null;
 
-    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'category')]
+    #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'category', cascade: ['persist', 'remove'], orphanRemoval: true )]
     #[Groups(['categories'])]
-    private Collection $appointments;
+    private Collection $services;
 
     public function __construct()
     {
-        $this->appointments = new ArrayCollection();
+        $this->services = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -63,26 +63,26 @@ class Category
         return $this;
     }
 
-    public function getAppointments(): Collection
+    public function getServices(): Collection
     {
-        return $this->appointments;
+        return $this->services;
     }
 
-    public function addAppointment(Appointment $appointment): static
+    public function addService(Service $service): static
     {
-        if (!$this->appointments->contains($appointment)) {
-            $this->appointments[] = $appointment;
-            $appointment->setCategory($this);
+        if (!$this->services->contains($service)) {
+            $this->services[] = $service;
+            $service->setCategory($this);
         }
 
         return $this;
     }
 
-    public function removeAppointment(Appointment $appointment): static
+    public function removeService(Service $service): static
     {
-        if ($this->appointments->removeElement($appointment)) {
-            if ($appointment->getCategory() === $this) {
-                $appointment->setCategory(null);
+        if ($this->services->removeElement($service)) {
+            if ($service->getCategory() === $this) {
+                $service->setCategory(null);
             }
         }
 

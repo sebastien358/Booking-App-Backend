@@ -43,8 +43,8 @@ class Appointment
     #[ORM\Column(nullable: false)]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'appointments')]
-    private ?Category $category = null;
+    #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'services')]
+    private ?Service $service = null;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -141,14 +141,14 @@ class Appointment
         return $this;
     }
 
-    public function getCategory(): ?Category
+    public function getService(): ?Service
     {
-        return $this->category;
+        return $this->service;
     }
 
-    public function setCategory(?Category $category): static
+    public function setService(?Service $service): static
     {
-        $this->category = $category;
+        $this->service = $service;
 
         return $this;
     }
