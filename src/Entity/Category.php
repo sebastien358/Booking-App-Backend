@@ -26,7 +26,6 @@ class Category
     private ?string $slug = null;
 
     #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'category', cascade: ['persist', 'remove'], orphanRemoval: true )]
-    #[Groups(['categories'])]
     private Collection $services;
 
     public function __construct()

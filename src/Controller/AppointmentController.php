@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Appointment;
-use App\Entity\Category;
 use App\Entity\Service;
 use App\Form\AppointmentType;
 use Doctrine\ORM\EntityManagerInterface;
