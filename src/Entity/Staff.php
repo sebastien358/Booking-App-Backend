@@ -16,29 +16,30 @@ class Staff
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['staff'])]
+    #[Groups(['staffs', 'staff'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 125)]
-    #[Groups(['staff'])]
+    #[Groups(['staffs', 'staff'])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 125)]
-    #[Groups(['staff'])]
+    #[Groups(['staffs', 'staff'])]
     private ?string $lastname = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['staff'])]
+    #[Groups(['staffs', 'staff'])]
     private ?bool $is_active = null;
 
     #[ORM\Column]
-    #[Groups(['staff'])]
+    #[Groups(['staffs', 'staff'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'staff', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $appointments;
 
     #[ORM\OneToOne(targetEntity: Picture::class, mappedBy: 'staff', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['staffs', 'staff'])]
     private ?Picture $picture = null;
 
     #[ORM\PrePersist]

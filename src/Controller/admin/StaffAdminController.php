@@ -53,10 +53,14 @@ class StaffAdminController extends AbstractController
                 $newFilename = $this->uploadFileService->upload($image);
                 $picture->setFilename($newFilename);
                 $picture->setStaff($staff);
+                $staff->setPicture($picture);
 
                 $this->entityManager->persist($picture);
-                $this->entityManager->flush();
             }
+
+            $this->entityManager->persist($staff);
+            $this->entityManager->flush();
+
             return new JsonResponse(['message' => 'Un employé a été ajouté'], Response::HTTP_OK);
         } catch(\Throwable $e) {
             $this->logger->error('Erreur de l\'ajout d\'un salarié : ', [$e->getMessage()]);
