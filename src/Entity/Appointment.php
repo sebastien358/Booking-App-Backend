@@ -41,10 +41,16 @@ class Appointment
     private bool $is_read = false;
 
     #[ORM\Column(nullable: false)]
+    #[Groups(['appointments', 'appointment'])]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'services')]
+    #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'appointments')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Service $service = null;
+
+    #[ORM\ManyToOne(targetEntity: Staff::class, inversedBy: 'appointments ')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Staff $staff = null;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -149,6 +155,18 @@ class Appointment
     public function setService(?Service $service): static
     {
         $this->service = $service;
+
+        return $this;
+    }
+
+    public function getStaff(): ?Staff
+    {
+        return $this->staff;
+    }
+
+    public function setStaff(?Staff $staff): static
+    {
+        $this->staff = $staff;
 
         return $this;
     }
