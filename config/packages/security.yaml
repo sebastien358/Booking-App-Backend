@@ -28,6 +28,7 @@ security:
     access_control:
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/admin/appointment, roles: ROLE_ADMIN }
+        - { path: ^/api/admin/contact, roles: ROLE_ADMIN }
         - { path: ^/api/admin/service, roles: ROLE_ADMIN }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
 
