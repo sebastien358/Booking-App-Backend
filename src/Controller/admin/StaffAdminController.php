@@ -5,6 +5,7 @@ namespace App\Controller\admin;
 use App\Entity\Picture;
 use App\Entity\Staff;
 use App\Form\StaffType;
+use App\Services\StaffService;
 use App\Services\UploadFileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -15,20 +16,38 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/admin/staff')]
 class StaffAdminController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
     private UploadFileService $uploadFileService;
+    private StaffService $staffService;
     private LoggerInterface $logger;
 
     public function __construct(
-        EntityManagerInterface $entityManager, UploadFileService $uploadFileService, LoggerInterface $logger)
+        EntityManagerInterface $entityManager, UploadFileService $uploadFileService,
+        StaffService $staffService, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
         $this->uploadFileService = $uploadFileService;
+        $this->staffService = $staffService;
         $this->logger = $logger;
+    }
+
+    #[Route('/list', methods: ['GET'])]
+    public function list(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $staffs = $this->entityManager->getRepository(Staff::class)->findAll();
+            $dataStaffs = $this->staffService->staffDisplay($staffs, $request, $serializer);
+
+            return new JsonResponse($dataStaffs, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/create', methods: ['POST'])]

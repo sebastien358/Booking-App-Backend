@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Appointment;
 use App\Entity\Service;
+use App\Entity\Staff;
 use App\Form\AppointmentType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -84,6 +85,13 @@ class AppointmentController extends AbstractController
             }
 
             $appointment->setService($serviceId);
+
+            $staffId = $this->entityManager->getRepository(Staff::class)->find($data['staff_id']);
+            if (!$staffId) {
+                return new JsonResponse(['error' => 'Staff inexistant'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $appointment->setStaff($staffId);
 
             $this->entityManager->persist($appointment);
             $this->entityManager->flush();

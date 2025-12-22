@@ -2,11 +2,15 @@
 
 namespace App\Controller\admin;
 
+use App\Entity\Category;
 use App\Entity\Service;
+use App\Form\ServiceType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -34,10 +38,56 @@ class ServiceAdminController extends AbstractController
                     return $object->getId();
                 }
             ]);
-
             return new JsonResponse($dataServices, Response::HTTP_OK);
         } catch(\Throwable $e) {
             $this->logger->error('Admin service error : ', [$e->getMessage()]);
         }
+    }
+
+    #[Route('/create', methods: ['POST'])]
+    public function add(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+            $service = new Service();
+
+            $form = $this->createForm(ServiceType::class, $service);
+            $form->submit($data);
+
+            if (!$form->isSubmitted() || !$form->isValid()) {
+                $errors = $this->getErrorMessages($form);
+                return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
+            }
+
+            $category = $this->entityManager->getRepository(Category::class)->find($data['category']);
+            if (!$category) {
+                return new JsonResponse(['error' => 'Category not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            $service->setCategory($category);
+
+            $this->entityManager->persist($service);
+            $this->entityManager->flush();
+
+            return new JsonResponse(['message' => 'Service create'], Response::HTTP_CREATED);
+        } catch(\Throwable $e) {
+            $this->logger->error('Admin service create error : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function getErrorMessages(FormInterface $form): array
+    {
+        $errors = [];
+        foreach ($form->getErrors() as $key => $error) {
+            $errors[] = $error->getMessage();
+        }
+        foreach ($form->all() as $child) {
+            if ($child->isSubmitted() && !$child->isValid()) {
+                $errors[$child->getName()] = $this->getErrorMessages($child);
+            }
+        }
+        return $errors;
     }
 }
