@@ -120,4 +120,9 @@ class Service
 
         return $this;
     }
+
+    public function getPictures(): Collection
+    {
+
+    }
 }

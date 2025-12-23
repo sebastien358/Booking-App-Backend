@@ -48,7 +48,7 @@ class Appointment
     #[ORM\JoinColumn(nullable: false)]
     private ?Service $service = null;
 
-    #[ORM\ManyToOne(targetEntity: Staff::class, inversedBy: 'appointments ')]
+    #[ORM\ManyToOne(targetEntity: Staff::class, inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Staff $staff = null;
 

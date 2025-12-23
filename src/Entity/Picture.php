@@ -19,9 +19,13 @@ class Picture
     #[Groups(['picture'])]
     private ?string $filename = null;
 
-    #[ORM\OneToOne(targetEntity: Staff::class, inversedBy: 'picture', cascade: ['persist'] , fetch: 'EAGER')]
+    #[ORM\OneToOne(targetEntity: Staff::class, inversedBy: 'picture', cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: true)]
     private ?Staff $staff = null;
+
+    #[ORM\OneToOne(targetEntity: Testimonial::class, inversedBy: 'picture', cascade: ['persist'])]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Testimonial $testimonial = null;
 
     public function getId(): ?int
     {
@@ -48,6 +52,18 @@ class Picture
     public function setStaff(?Staff $staff): static
     {
         $this->staff = $staff;
+
+        return $this;
+    }
+
+    public function getTestimonial(): ?Testimonial
+    {
+        return $this->testimonial;
+    }
+
+    public function setTestimonial(?Testimonial $testimonial): static
+    {
+        $this->testimonial = $testimonial;
 
         return $this;
     }

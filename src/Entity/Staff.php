@@ -6,7 +6,6 @@ use App\Repository\StaffRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use phpDocumentor\Reflection\Types\Nullable;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: StaffRepository::class)]
@@ -35,7 +34,7 @@ class Staff
     #[Groups(['staffs', 'staff'])]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'staff', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'staff', cascade: ['remove'], orphanRemoval: true)]
     private Collection $appointments;
 
     #[ORM\OneToOne(targetEntity: Picture::class, mappedBy: 'staff', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -48,7 +47,7 @@ class Staff
         $this->created_at = new \DateTimeImmutable();
     }
 
-    public function __construct(){
+    public function __construct() {
         $this->appointments = new ArrayCollection();
     }
 
