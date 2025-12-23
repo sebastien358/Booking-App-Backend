@@ -13,30 +13,37 @@ class Testimonial
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 125)]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?string $author = null;
 
     #[ORM\Column(length: 125)]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?string $job = null;
 
     #[Assert\Range(min: 1, max: 5)]
     #[ORM\Column]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?int $rating = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?string $message = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?bool $is_published = null;
 
     #[ORM\Column(nullable: false)]
-    #[Groups(['appointments', 'appointment'])]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\OneToOne(targetEntity: Picture::class, inversedBy: 'testimonial', cascade: ['persist'], orphanRemoval: true)]
     #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['testimonials', 'testimonial'])]
     private ?Picture $picture = null;
 
     #[ORM\PrePersist]

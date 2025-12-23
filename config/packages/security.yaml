@@ -30,6 +30,9 @@ security:
         - { path: ^/api/admin/appointment, roles: ROLE_ADMIN }
         - { path: ^/api/admin/contact, roles: ROLE_ADMIN }
         - { path: ^/api/admin/service, roles: ROLE_ADMIN }
+        - { path: ^/api/admin/category, roles: ROLE_ADMIN }
+        - { path: ^/api/admin/staff, roles: ROLE_ADMIN }
+        - { path: ^/api/admin/testimonial, roles: ROLE_ADMIN }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
 
     role_hierarchy:

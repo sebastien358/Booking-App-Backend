@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/testimonial')]
 class TestimonialController extends AbstractController
@@ -30,46 +31,79 @@ class TestimonialController extends AbstractController
         $this->logger = $logger;
     }
 
+    #[Route('/list', methods: ['GET'])]
+    public function index(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAll();
+
+            $dataTestimonials = $serializer->normalize($testimonials, 'json', ['groups' => ['testimonials', 'picture'],
+                'circular_reference_handler' => function ($object) {
+                    return $object->getId();
+                }
+            ]);
+
+            $urlFilename = $request->getSchemeAndHttpHost() . '/images/';
+            foreach ($dataTestimonials as &$dataTestimonial) {
+                if (isset($dataTestimonial['picture']['filename'])) {
+                    $dataTestimonial['picture']['filename'] = $urlFilename . $dataTestimonial['picture']['filename'];
+                }
+            }
+
+            return new JsonResponse($dataTestimonials, Response::HTTP_OK);
+        } catch (\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des témoignages : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/create', methods: ['POST'])]
     public function add(Request $request): JsonResponse
     {
-        $testimonial = new Testimonial();
+        try {
+            $testimonial = new Testimonial();
 
-        $form = $this->createForm(TestimonialType::class, $testimonial);
-        $form->submit($request->request->all(), false);
+            $form = $this->createForm(TestimonialType::class, $testimonial);
+            $form->submit($request->request->all(), false);
 
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            return new JsonResponse([
-                'errors' => (string) $form->getErrors(true, false)
-            ], Response::HTTP_BAD_REQUEST);
+            if (!$form->isSubmitted() || !$form->isValid()) {
+                $errors = $this->getErrorMessages($form);
+                return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
+            }
+
+            $image = $request->files->get('filename');
+            if ($image) {
+                $picture = new Picture();
+                $newFilename = $this->uploadFileService->upload($image);
+
+                $picture->setFilename($newFilename);
+                $picture->setTestimonial($testimonial);
+                $testimonial->setPicture($picture);
+
+                $this->entityManager->persist($picture);
+            }
+
+            $this->entityManager->persist($testimonial);
+            $this->entityManager->flush();
+
+            return new JsonResponse(['success' => true, 'message' => 'Témoignage envoyé'], Response::HTTP_CREATED);
+        } catch(\Throwable $e) {
+            $this->logger->error('Error le témoignage n\'a pas pu etre envoyé', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
-
-        $image = $request->files->get('filename');
-        if ($image) {
-            $picture = new Picture();
-            $newFilename = $this->uploadFileService->upload($image);
-
-            $picture->setFilename($newFilename);
-            $picture->setTestimonial($testimonial);
-            $testimonial->setPicture($picture);
-
-            $this->entityManager->persist($picture);
-        }
-
-        $this->entityManager->persist($testimonial);
-        $this->entityManager->flush();
-
-        return new JsonResponse(['ok' => true], Response::HTTP_CREATED);
     }
 
     private function getErrorMessages(FormInterface $form): array
     {
         $errors = [];
-
-        foreach ($form->getErrors(true) as $error) {
-            $errors[] = (string) $error->getMessage();
+        foreach ($form->getErrors() as $key => $error) {
+            $errors[] = $error->getMessage();
         }
-
+        foreach ($form->all() as $child) {
+            if ($child->isSubmitted() && !$child->isValid()) {
+                $errors[$child->getName()] = $this->getErrorMessages($child);
+            }
+        }
         return $errors;
     }
 }
