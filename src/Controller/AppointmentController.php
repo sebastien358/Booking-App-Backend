@@ -45,15 +45,25 @@ class AppointmentController extends AbstractController
     #[Route('/calendar', methods: ['GET'])]
     public function calendar(): JsonResponse
     {
-        $appointments = $this->entityManager->getRepository(Appointment::class)->findAll();
+        $appointments = $this->entityManager
+            ->getRepository(Appointment::class)
+            ->findAll();
 
-        $data = array_map(fn($a) => [
-            'start' => $a->getDatetime()->format('Y-m-d\TH:i:s'),
-            'end'   => $a->getDatetime()->modify('+30 minutes')->format('Y-m-d\TH:i:s'),
-            'display' => 'background', // important
-        ], $appointments);
+        $data = array_map(function (Appointment $a) {
 
-        return new JsonResponse($data);
+            $start = $a->getDatetime();
+            $duration = $a->getService()->getDuration(); // minutes
+            $end = $start->modify("+{$duration} minutes");
+
+            return [
+                'id' => $a->getId(),
+                'start' => $start->format('c'),
+                'end' => $end->format('c'),
+                'staffId' => $a->getStaff()->getId(),
+            ];
+        }, $appointments);
+
+        return $this->json($data);
     }
 
     #[Route('/create', methods: ['POST'])]
@@ -62,44 +72,65 @@ class AppointmentController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
+            // 🔹 DATETIME (SEUL CHAMP TEMPS)
+            if (empty($data['datetime'])) {
+                return new JsonResponse(['error' => 'datetime manquant'], 400);
+            }
+
+            $datetime = new \DateTimeImmutable($data['datetime']);
+
             $appointment = new Appointment();
+            $appointment->setDatetime($datetime);
 
-            $form = $this->createForm(AppointmentType::class, $appointment);
-            $form->submit($data);
+            // 🔹 SERVICE
+            $service = $this->entityManager
+                ->getRepository(Service::class)
+                ->find($data['service_id']);
 
-            if (!$form->isSubmitted() || !$form->isValid()) {
-                $errors = $this->getErrorMessages($form);
-                return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
+            if (!$service) {
+                return new JsonResponse(['error' => 'Service inexistant'], 400);
             }
 
-            $date = new \DateTimeImmutable($data['datetime']);
+            $appointment->setService($service);
 
-            $dateTime = $this->entityManager->getRepository(Appointment::class)->findOneBy(['datetime' => $date]);
-            if ($dateTime) {
-                return new JsonResponse(['type' => 'DATETIME_ALREADY_TAKEN', 'error' => 'Ce créneau est déjà réservé'], Response::HTTP_CONFLICT);
+            // 🔹 STAFF
+            $staff = $this->entityManager
+                ->getRepository(Staff::class)
+                ->find($data['staff_id']);
+
+            if (!$staff) {
+                return new JsonResponse(['error' => 'Staff inexistant'], 400);
             }
 
-            $serviceId = $this->entityManager->getRepository(Service::class)->find($data['service_id']);
-            if (!$serviceId) {
-                return new JsonResponse(['error' => 'Service innexistant'], Response::HTTP_BAD_REQUEST);
+            $appointment->setStaff($staff);
+
+            // 🔹 INFOS CLIENT
+            $appointment->setFirstname($data['firstname']);
+            $appointment->setLastname($data['lastname']);
+            $appointment->setEmail($data['email']);
+            $appointment->setPhone($data['phone']);
+            $appointment->setCreatedAt(new \DateTimeImmutable());
+
+            // 🔹 CONFLIT (datetime + staff)
+            $existing = $this->entityManager->getRepository(Appointment::class)->findOneBy([
+                'datetime' => $datetime,
+                'staff' => $staff,
+            ]);
+
+            if ($existing) {
+                return new JsonResponse(
+                    ['error' => 'Créneau déjà réservé'],
+                    Response::HTTP_CONFLICT
+                );
             }
-
-            $appointment->setService($serviceId);
-
-            $staffId = $this->entityManager->getRepository(Staff::class)->find($data['staff_id']);
-            if (!$staffId) {
-                return new JsonResponse(['error' => 'Staff inexistant'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $appointment->setStaff($staffId);
 
             $this->entityManager->persist($appointment);
             $this->entityManager->flush();
 
-            return new JsonResponse(['message' => 'Rendez vous créé avec succès'], Response::HTTP_CREATED);
-        } catch(\Throwable $e) {
-            $this->logger->error('Erreur de la prise de rendez-vous : ', [$e->getMessage()]);
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'Rendez-vous créé'], 201);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
 
