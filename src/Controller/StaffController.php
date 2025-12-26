@@ -33,6 +33,9 @@ class StaffController extends AbstractController
     {
         try {
             $staffs = $this->entityManager->getRepository(Staff::class)->findAll();
+            if (!$staffs) {
+                return  new JsonResponse(['error' => 'Error de la récupération des salariés'], Response::HTTP_NOT_FOUND);
+            }
             $dataStaffs = $this->staffService->staffDisplay($staffs, $request, $serializer);
 
             return new JsonResponse($dataStaffs, Response::HTTP_OK);

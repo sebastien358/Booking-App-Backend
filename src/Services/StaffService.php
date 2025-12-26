@@ -13,13 +13,19 @@ class StaffService
         ];
 
         if (!is_array($staffs)) {
-            return null;
+            $dataStaff = $serializer->normalize($staffs, 'json', $elems);
+
+            $urlImage = $request->getSchemeAndHttpHost() . '/images/';
+            if (!empty($dataStaff['picture']['filename'])) {
+                $dataStaff['picture']['filename'] = $urlImage . $dataStaff['picture']['filename'];
+            }
+
+            return $dataStaff;
         }
 
         $dataStaffs = $serializer->normalize($staffs, 'json', $elems);
 
         $urlImage = $request->getSchemeAndHttpHost() . '/images/';
-
         foreach ($dataStaffs as &$dataStaff) {
             if (!empty($dataStaff['picture']['filename'])) {
                 $dataStaff['picture']['filename'] = $urlImage . $dataStaff['picture']['filename'];

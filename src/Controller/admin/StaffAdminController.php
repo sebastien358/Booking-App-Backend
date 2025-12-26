@@ -43,7 +43,26 @@ class StaffAdminController extends AbstractController
             $staffs = $this->entityManager->getRepository(Staff::class)->findAll();
             $dataStaffs = $this->staffService->staffDisplay($staffs, $request, $serializer);
 
+
             return new JsonResponse($dataStaffs, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/show/{id}', methods: ['GET'])]
+    public function show(int $id, Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $staff = $this->entityManager->getRepository(Staff::class)->find($id);
+            if (!$staff) {
+                return new JsonResponse(['error' => 'Coiffeur introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $dataStaff = $this->staffService->staffDisplay($staff, $request, $serializer);
+
+            return new JsonResponse($dataStaff, Response::HTTP_OK);
         } catch(\Throwable $e) {
             $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
