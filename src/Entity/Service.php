@@ -15,27 +15,27 @@ class Service
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private ?string $price = null;
 
     #[ORM\Column]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private ?int $duration = null;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'services')]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private ?Category $category = null;
 
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'service', cascade: ['persist', 'remove'] , orphanRemoval: true)]
-    #[Groups(['services'])]
+    #[Groups(['services', 'service'])]
     private Collection $appointments;
 
     public function __construct()

@@ -36,4 +36,30 @@ class AppointmentAdminController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/show/{id}', methods: ['GET'])]
+    public function show(int $id, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $appointment = $this->entityManager->getRepository(Appointment::class)->find($id);
+            if (!$appointment) {
+                return new JsonResponse(['error' => 'Rendez-vous introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $appointment->setIsRead(true);
+
+            $dataAppointment = $serializer->normalize($appointment, 'json', ['groups' =>
+                ['appointment', 'service', 'staff'], 'circular_reference_handler' => function ($object) {
+                    return $object->getId();
+                }
+            ]);
+
+            $this->entityManager->flush();
+
+            return new JsonResponse($dataAppointment);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur du details d\'un rendez-vous : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

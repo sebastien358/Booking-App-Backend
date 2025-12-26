@@ -46,10 +46,12 @@ class Appointment
 
     #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointments', 'appointment'])]
     private ?Service $service = null;
 
     #[ORM\ManyToOne(targetEntity: Staff::class, inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['appointments', 'appointment'])]
     private ?Staff $staff = null;
 
     #[ORM\PrePersist]

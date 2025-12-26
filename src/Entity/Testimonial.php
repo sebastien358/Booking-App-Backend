@@ -41,8 +41,7 @@ class Testimonial
     #[Groups(['testimonials', 'testimonial'])]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\OneToOne(targetEntity: Picture::class, inversedBy: 'testimonial', cascade: ['persist'], orphanRemoval: true)]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\OneToOne(targetEntity: Picture::class, mappedBy: 'testimonial', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['testimonials', 'testimonial'])]
     private ?Picture $picture = null;
 

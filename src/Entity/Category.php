@@ -14,15 +14,15 @@ class Category
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['categories'])]
+    #[Groups(['categories', 'cat'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 60)]
-    #[Groups(['categories'])]
+    #[Groups(['categories', 'cat'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 60, unique: true)]
-    #[Groups(['categories'])]
+    #[Groups(['categories', 'cat'])]
     private ?string $slug = null;
 
     #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'category', cascade: ['persist', 'remove'], orphanRemoval: true )]

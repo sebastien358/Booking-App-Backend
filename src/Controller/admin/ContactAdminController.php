@@ -36,4 +36,25 @@ class ContactAdminController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/show/{id}', methods: ['GET'])]
+    public function show(int $id, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $contact = $this->entityManager->getRepository(Contact::class)->find($id);
+            if (!$contact) {
+                return new JsonResponse(['error' => 'Message introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $contact->setIsRead(true);
+            $dataContact = $serializer->normalize($contact, 'json', ['groups' => 'contact']);
+
+            $this->entityManager->flush();
+
+            return new JsonResponse($dataContact, Response::HTTP_OK,);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des contacts : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

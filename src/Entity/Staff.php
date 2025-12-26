@@ -35,6 +35,7 @@ class Staff
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'staff', cascade: ['remove'], orphanRemoval: true)]
+    #[Groups(['staffs', 'staff'])]
     private Collection $appointments;
 
     #[ORM\OneToOne(targetEntity: Picture::class, mappedBy: 'staff', cascade: ['persist', 'remove'], orphanRemoval: true)]
