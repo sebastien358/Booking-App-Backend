@@ -44,6 +44,28 @@ class ServiceAdminController extends AbstractController
         }
     }
 
+    #[Route('/show/{id}', methods: ['GET'])]
+    public function show(int $id, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $service= $this->entityManager->getRepository(Service::class)->find($id);
+            if (!$service) {
+                return new JsonResponse(['error' => 'Service introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $dataService = $serializer->normalize($service, 'json', ['groups' => ['services', 'cat'],
+                'circulation_reference_handler', function ($object) {
+                    return $object->getId();
+                }
+            ]);
+
+            return new JsonResponse($dataService, Response::HTTP_OK,);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des contacts : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/create', methods: ['POST'])]
     public function add(Request $request): JsonResponse
     {
