@@ -106,6 +106,25 @@ class StaffAdminController extends AbstractController
         }
     }
 
+    #[Route('/{id}/toggle', methods: ['POST'])]
+    public function toggle(int $id): JsonResponse
+    {
+        try {
+            $staff = $this->entityManager->getRepository(Staff::class)->find($id);
+            $staff->setIsActive(!$staff->isActive());
+
+            $this->entityManager->flush();
+
+            return new JsonResponse([
+                'id' => $staff->getId(),
+                'is_active' => $staff->isActive(),
+            ] , Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private function getErrorMessages(FormInterface $form): array
     {
         $errors = [];
