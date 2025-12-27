@@ -106,6 +106,36 @@ class StaffAdminController extends AbstractController
         }
     }
 
+    #[Route('/delete/{id}/picture/{pictureId}', methods: ['GET'])]
+    public function delete(int $id, int $pictureId): JsonResponse
+    {
+        try {
+            $staff = $this->entityManager->getRepository(Staff::class)->find($id);
+
+            if (!$staff) {
+                return new JsonResponse(['error' => 'Coiffeuse introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $img = $staff->getPicture();
+
+            if ($img !== null && $pictureId !== 0) {
+                if ($img->getId() !== $pictureId) {
+                    return new JsonResponse(['error' => 'L\'image ne correspond pas aux coiffeuses'], Response::HTTP_NOT_FOUND);
+                }
+                $this->uploadFileService->deleteFile($img->getFilename());
+                $this->entityManager->remove($img);
+            }
+
+            $this->entityManager->remove($staff);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/{id}/toggle', methods: ['POST'])]
     public function toggle(int $id): JsonResponse
     {

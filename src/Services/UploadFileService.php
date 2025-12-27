@@ -19,4 +19,11 @@ class UploadFileService
         $file->move($this->targetDirectory, $newFilename);
         return $newFilename;
     }
+
+    public function deleteFile(string $img) {
+        $filepath = $this->targetDirectory . '/' . $img;
+        if (file_exists($filepath)) {
+            unlink($filepath);
+        }
+    }
 }
