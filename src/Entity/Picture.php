@@ -19,12 +19,14 @@ class Picture
     #[Groups(['picture'])]
     private ?string $filename = null;
 
-    #[ORM\OneToOne(targetEntity: Staff::class, inversedBy: 'picture')]
+    #[ORM\OneToOne(inversedBy: 'picture')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    #[Groups(['picture'])]
     private ?Staff $staff = null;
 
-    #[ORM\OneToOne(targetEntity: Testimonial::class, inversedBy: 'picture')]
+    #[ORM\OneToOne(inversedBy: 'picture')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    #[Groups(['picture'])]
     private ?Testimonial $testimonial = null;
 
     public function getId(): ?int

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Picture;
 use App\Entity\Testimonial;
 use App\Form\TestimonialType;
+use App\Services\TestimonialService;
 use App\Services\UploadFileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -21,13 +22,16 @@ class TestimonialController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
     private UploadFileService $uploadFileService;
-    private LOggerInterface $logger;
+    private TestimonialService $testimonialService;
+    private LoggerInterface $logger;
 
     public function __construct(
-        EntityManagerInterface $entityManager, UploadFileService $uploadFileService, LoggerInterface $logger)
+        EntityManagerInterface $entityManager, UploadFileService $uploadFileService,
+        TestimonialService $testimonialService, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
         $this->uploadFileService = $uploadFileService;
+        $this->testimonialService = $testimonialService;
         $this->logger = $logger;
     }
 
@@ -36,21 +40,9 @@ class TestimonialController extends AbstractController
     {
         try {
             $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAll();
+            $dataList = $this->testimonialService->testimonialDisplay($testimonials, $request, $serializer);
 
-            $dataTestimonials = $serializer->normalize($testimonials, 'json', ['groups' => ['testimonials', 'picture'],
-                'circular_reference_handler' => function ($object) {
-                    return $object->getId();
-                }
-            ]);
-
-            $urlFilename = $request->getSchemeAndHttpHost() . '/images/';
-            foreach ($dataTestimonials as &$dataTestimonial) {
-                if (isset($dataTestimonial['picture']['filename'])) {
-                    $dataTestimonial['picture']['filename'] = $urlFilename . $dataTestimonial['picture']['filename'];
-                }
-            }
-
-            return new JsonResponse($dataTestimonials, Response::HTTP_OK);
+            return new JsonResponse($dataList, Response::HTTP_OK);
         } catch (\Throwable $e) {
             $this->logger->error('Erreur de la récupération des témoignages : ', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
