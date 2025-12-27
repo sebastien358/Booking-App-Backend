@@ -106,12 +106,30 @@ class StaffAdminController extends AbstractController
         }
     }
 
-    #[Route('/delete/{id}/picture/{pictureId}', methods: ['GET'])]
+    #[Route('/delete/{id}', methods: ['DELETE'])]
+    public function deleteId(int $id): JsonResponse
+    {
+        try {
+            $staff = $this->entityManager->getRepository(Staff::class)->find($id);
+            if (!$staff) {
+                return new JsonResponse(['error' => 'Coiffeuse introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $this->entityManager->remove($staff);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la suppprésion d\'un des salariés : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/delete/{id}/picture/{pictureId}', methods: ['DELETE'])]
     public function delete(int $id, int $pictureId): JsonResponse
     {
         try {
             $staff = $this->entityManager->getRepository(Staff::class)->find($id);
-
             if (!$staff) {
                 return new JsonResponse(['error' => 'Coiffeuse introuvable'], Response::HTTP_NOT_FOUND);
             }
@@ -131,7 +149,7 @@ class StaffAdminController extends AbstractController
 
             return new JsonResponse(null, Response::HTTP_OK);
         } catch(\Throwable $e) {
-            $this->logger->error('Erreur de la récupération des salariés : ', [$e->getMessage()]);
+            $this->logger->error('Erreur de la suppprésion d\'un des salariés : ', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
