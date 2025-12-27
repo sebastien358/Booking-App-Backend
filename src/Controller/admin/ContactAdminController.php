@@ -57,4 +57,23 @@ class ContactAdminController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/delete/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        try {
+            $contact = $this->entityManager->getRepository(Contact::class)->find($id);
+            if (!$contact) {
+                return new JsonResponse(['error' => 'Message introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $this->entityManager->remove($contact);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la suppression des contacts : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

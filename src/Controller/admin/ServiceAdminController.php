@@ -99,6 +99,25 @@ class ServiceAdminController extends AbstractController
         }
     }
 
+    #[Route('/delete/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        try {
+            $service= $this->entityManager->getRepository(Service::class)->find($id);
+            if (!$service) {
+                return new JsonResponse(['error' => 'Service introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $this->entityManager->remove($service);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_OK,);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des contacts : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private function getErrorMessages(FormInterface $form): array
     {
         $errors = [];

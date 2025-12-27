@@ -62,4 +62,23 @@ class AppointmentAdminController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/delete/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        try {
+            $appointment = $this->entityManager->getRepository(Appointment::class)->find($id);
+            if (!$appointment) {
+                return new JsonResponse(['error' => 'Rendez-vous introuvable'], Response::HTTP_NOT_FOUND);
+            }
+
+            $this->entityManager->remove($appointment);
+            $this->entityManager->flush();
+
+            return new JsonResponse(null, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur du details d\'un rendez-vous : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
