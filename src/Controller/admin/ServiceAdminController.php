@@ -44,6 +44,21 @@ class ServiceAdminController extends AbstractController
         }
     }
 
+    #[Route('/search', methods: ['GET'])]
+    public function search(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $search = $request->query->get('search');
+            $services = $this->entityManager->getRepository(Service::class)->findAllServiceSearch($search);
+
+            $dataServices = $serializer->normalize($services, 'json', ['groups' => ['services', 'categories']]);
+            return new JsonResponse($dataServices, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/show/{id}', methods: ['GET'])]
     public function show(int $id, SerializerInterface $serializer): JsonResponse
     {

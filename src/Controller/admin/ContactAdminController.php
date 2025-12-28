@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -33,6 +34,22 @@ class ContactAdminController extends AbstractController
             return new JsonResponse($dataContacts, Response::HTTP_OK,);
         } catch(\Throwable $e) {
             $this->logger->error('Erreur de la récupération des contacts : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/search', methods: ['GET'])]
+    public function search(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $search = $request->query->get('search');
+            $contacts = $this->entityManager->getRepository(Contact::class)->findAllContactSearch($search);
+
+            $dataContacts = $serializer->normalize($contacts, 'json', ['groups' => 'contacts']);
+
+            return new JsonResponse($dataContacts, Response::HTTP_OK,);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur search contacts: ', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

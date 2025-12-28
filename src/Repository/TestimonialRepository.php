@@ -16,6 +16,16 @@ class TestimonialRepository extends ServiceEntityRepository
         parent::__construct($registry, Testimonial::class);
     }
 
+    public function findAllTestimonialSearch(string $search)
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.author LIKE :search')
+            ->setParameter('search', '%' . $search . '%')
+            ->orderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Testimonial[] Returns an array of Testimonial objects
     //     */

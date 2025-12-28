@@ -46,6 +46,23 @@ class TestimonialAdminController extends AbstractController
         }
     }
 
+
+    #[Route('/search', methods: ['GET'])]
+    public function search(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $search = $request->query->get('search');
+            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAllTestimonialSearch($search);
+
+            $dataTestimonials = $serializer->normalize($testimonials, 'json', ['groups' => 'testimonials']);
+
+            return new JsonResponse($dataTestimonials, Response::HTTP_OK,);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur search contacts: ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/show/{id}', methods: ['GET'])]
     public function show(int $id, Request $request, SerializerInterface $serializer): JsonResponse
     {

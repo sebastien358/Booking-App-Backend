@@ -47,7 +47,7 @@ class AppointmentAdminController extends AbstractController
             $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointmentsSearch($search);
 
             $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
-            return new JsonResponse($dataAppointments);
+            return new JsonResponse($dataAppointments, Response::HTTP_OK);
         } catch(\Throwable $e) {
             $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);

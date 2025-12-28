@@ -24,6 +24,17 @@ class ContactRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllContactSearch(string $search)
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.firstname LIKE :search OR c.lastname LIKE :search')
+            ->setParameter('search', '%' . $search . '%')
+            ->orderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
     //    /**
     //     * @return Contact[] Returns an array of Contact objects
     //     */

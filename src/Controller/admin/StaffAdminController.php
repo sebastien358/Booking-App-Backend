@@ -51,6 +51,21 @@ class StaffAdminController extends AbstractController
         }
     }
 
+    #[Route('/search', methods: ['GET'])]
+    public function search(Request $request, SerializerInterface $serializer): JsonResponse
+    {
+        try {
+            $search = $request->query->get('search');
+            $staffs = $this->entityManager->getRepository(Staff::class)->findAllStaffSearch($search);
+
+            $dataStaffs = $serializer->normalize($staffs, 'json', ['groups' => 'staffs']);
+            return new JsonResponse($dataStaffs, Response::HTTP_OK);
+        } catch(\Throwable $e) {
+            $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/show/{id}', methods: ['GET'])]
     public function show(int $id, Request $request, SerializerInterface $serializer): JsonResponse
     {

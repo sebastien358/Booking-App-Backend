@@ -24,6 +24,17 @@ class ServiceRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllServiceSearch(string $search)
+    {
+        return $this->createQueryBuilder('s')
+            ->where('s.name LIKE :search')
+            ->setParameter('search', '%' . $search . '%')
+            ->orderBy('s.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+    }
+
     //    /**
     //     * @return Service[] Returns an array of Service objects
     //     */

@@ -31,6 +31,7 @@ class AppointmentRepository extends ServiceEntityRepository
             ->leftJoin('a.staff', 's')
             ->andWhere('s.firstname LIKE :search OR s.lastname LIKE :search')
             ->setParameter('search', '%' . $search . '%')
+            ->orderBy('s.id', 'DESC')
             ->getQuery()
             ->getResult();
     }
