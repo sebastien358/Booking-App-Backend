@@ -25,6 +25,16 @@ class AppointmentRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllAppointmentsSearch(string $search): array
+    {
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.staff', 's')
+            ->andWhere('s.firstname LIKE :search OR s.lastname LIKE :search')
+            ->setParameter('search', '%' . $search . '%')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Appointment[] Returns an array of Appointment objects
     //     */
