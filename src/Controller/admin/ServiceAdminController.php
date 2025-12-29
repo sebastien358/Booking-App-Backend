@@ -28,10 +28,12 @@ class ServiceAdminController extends AbstractController
     }
 
     #[Route('/list', methods: ['GET'])]
-    public function list(SerializerInterface $serializer): JsonResponse
+    public function list(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $services = $this->entityManager->getRepository(Service::class)->findAllServices();
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
+            $services = $this->entityManager->getRepository(Service::class)->findAllServices($limit, $offset);
 
             $dataServices = $serializer->normalize($services, 'json', ['groups' => ['services', 'categories'],
                 'circulation_reference_handler', function ($object) {

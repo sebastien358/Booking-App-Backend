@@ -40,9 +40,11 @@ class StaffAdminController extends AbstractController
     public function list(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $staffs = $this->entityManager->getRepository(Staff::class)->findAll();
-            $dataStaffs = $this->staffService->staffDisplay($staffs, $request, $serializer);
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
 
+            $staffs = $this->entityManager->getRepository(Staff::class)->findAllStaffs($limit, $offset);
+            $dataStaffs = $this->staffService->staffDisplay($staffs, $request, $serializer);
 
             return new JsonResponse($dataStaffs, Response::HTTP_OK);
         } catch(\Throwable $e) {

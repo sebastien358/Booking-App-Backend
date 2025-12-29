@@ -16,6 +16,16 @@ class StaffRepository extends ServiceEntityRepository
         parent::__construct($registry, Staff::class);
     }
 
+        public function findAllStaffs(int $limit, int $offset)
+        {
+            return $this->createQueryBuilder('s')
+                ->setFirstResult($offset)
+                ->setMaxResults($limit)
+                ->orderBy('s.id', 'DESC')
+                ->getQuery()
+                ->getResult();
+        }
+
         public function findAllStaffSearch(string $search)
         {
             return $this->createQueryBuilder('s')

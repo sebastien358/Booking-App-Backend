@@ -39,9 +39,12 @@ class TestimonialController extends AbstractController
     public function index(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAll();
-            $dataList = $this->testimonialService->testimonialDisplay($testimonials, $request, $serializer);
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
 
+            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAllTestimonials($limit, $offset);
+
+            $dataList = $this->testimonialService->testimonialDisplay($testimonials, $request, $serializer);
             return new JsonResponse($dataList, Response::HTTP_OK);
         } catch (\Throwable $e) {
             $this->logger->error('Erreur de la récupération des témoignages : ', [$e->getMessage()]);

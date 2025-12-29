@@ -14,6 +14,17 @@ class TestimonialRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Testimonial::class);
+
+    }
+
+    public function findAllTestimonials(int $limit, int $offset)
+    {
+        return $this->createQueryBuilder('t')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->orderBy('t.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function findAllTestimonialSearch(string $search)

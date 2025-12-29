@@ -25,10 +25,13 @@ class ContactAdminController extends AbstractController
     }
 
     #[Route('/list', methods: ['GET'])]
-    public function list(SerializerInterface $serializer): JsonResponse
+    public function list(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $contacts = $this->entityManager->getRepository(Contact::class)->findAllContacts();
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
+
+            $contacts = $this->entityManager->getRepository(Contact::class)->findAllContacts($limit, $offset);
             $dataContacts = $serializer->normalize($contacts, 'json', ['groups' => 'contacts']);
 
             return new JsonResponse($dataContacts, Response::HTTP_OK,);

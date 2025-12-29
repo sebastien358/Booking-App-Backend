@@ -16,9 +16,11 @@ class ContactRepository extends ServiceEntityRepository
         parent::__construct($registry, Contact::class);
     }
 
-    public function findAllContacts()
+    public function findAllContacts($limit, $offset)
     {
         return $this->createQueryBuilder('c')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->orderBy('c.id', 'DESC')
             ->getQuery()
             ->getResult();

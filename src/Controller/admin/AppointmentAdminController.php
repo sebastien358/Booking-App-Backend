@@ -25,10 +25,12 @@ class AppointmentAdminController extends AbstractController
     }
 
     #[Route('/list', methods: ['GET'])]
-    public function list(SerializerInterface $serializer): JsonResponse
+    public function list(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointments();
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
+            $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointments($limit, $offset);
 
             $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
             return new JsonResponse($dataAppointments);

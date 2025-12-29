@@ -16,9 +16,11 @@ class ServiceRepository extends ServiceEntityRepository
         parent::__construct($registry, Service::class);
     }
 
-    public function findAllServices()
+    public function findAllServices(int $limit, int $offset)
     {
         return $this->createQueryBuilder('s')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->orderBy('s.id', 'DESC')
             ->getQuery()
             ->getResult();

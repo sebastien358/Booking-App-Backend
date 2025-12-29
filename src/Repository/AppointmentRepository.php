@@ -16,11 +16,12 @@ class AppointmentRepository extends ServiceEntityRepository
         parent::__construct($registry, Appointment::class);
     }
 
-    public function findAllAppointments()
+    public function findAllAppointments(int $limit, int $offset)
     {
         return $this->createQueryBuilder('a')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->orderBy('a.id', 'DESC')
-            ->setMaxResults(10)
             ->getQuery()
             ->getResult();
     }

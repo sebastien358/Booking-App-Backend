@@ -36,7 +36,10 @@ class TestimonialAdminController extends AbstractController
     public function index(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
-            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAll();
+            $limit = $request->query->get('limit');
+            $offset = $request->query->get('offset');
+
+            $testimonials = $this->entityManager->getRepository(Testimonial::class)->findAllTestimonials($limit, $offset);
             $testimonials = $this->testimonialService->testimonialDisplay($testimonials, $request, $serializer);
 
             return new JsonResponse($testimonials, Response::HTTP_OK);
