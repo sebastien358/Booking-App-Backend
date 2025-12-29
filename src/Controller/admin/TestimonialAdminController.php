@@ -103,6 +103,28 @@ class TestimonialAdminController extends AbstractController
         }
     }
 
+    #[Route('/{id}/toggle', methods: ['POST'])]
+    public function toggle(int $id): JsonResponse
+    {
+        try {
+            $testimonial = $this->entityManager->getRepository(Testimonial::class)->find($id);
+            if (!$testimonial) {
+                return new JsonResponse(['error' => 'Erreur de la récupération d\'un témoignage'], Response::HTTP_NOT_FOUND);
+            }
+
+            $testimonial->setIsPublished(!$testimonial->getIsPublished());
+            $this->entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'is_published' => $testimonial->getIsPublished(),
+            ], Response::HTTP_OK);
+        } catch (\Throwable $e) {
+            $this->logger->error('Erreur de la récupération des témoignages : ', [$e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/show/{id}/picture/{pictureId}', methods: ['DELETE'])]
     public function delete(int $id, int $pictureId): JsonResponse
     {
