@@ -72,15 +72,11 @@ class AppointmentController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-            // 🔹 DATETIME (SEUL CHAMP TEMPS)
             if (empty($data['datetime'])) {
                 return new JsonResponse(['error' => 'datetime manquant'], 400);
             }
 
-            $datetime = new \DateTimeImmutable($data['datetime']);
-
-            $appointment = new Appointment();
-            $appointment->setDatetime($datetime);
+            $start = new \DateTimeImmutable($data['datetime']);
 
             // 🔹 SERVICE
             $service = $this->entityManager
@@ -91,7 +87,8 @@ class AppointmentController extends AbstractController
                 return new JsonResponse(['error' => 'Service inexistant'], 400);
             }
 
-            $appointment->setService($service);
+            $duration = $service->getDuration(); // en minutes
+            $end = $start->modify("+{$duration} minutes");
 
             // 🔹 STAFF
             $staff = $this->entityManager
@@ -102,27 +99,40 @@ class AppointmentController extends AbstractController
                 return new JsonResponse(['error' => 'Staff inexistant'], 400);
             }
 
-            $appointment->setStaff($staff);
+            // 🔹 RECHERCHE DES RDV EXISTANTS DU STAFF
+            $qb = $this->entityManager->getRepository(Appointment::class)->createQueryBuilder('a');
 
-            // 🔹 INFOS CLIENT
+            $appointments = $qb
+                ->where('a.staff = :staff')
+                ->setParameter('staff', $staff)
+                ->getQuery()
+                ->getResult();
+
+            foreach ($appointments as $existing) {
+                $existingStart = $existing->getDatetime();
+                $existingEnd = $existingStart->modify(
+                    '+' . $existing->getService()->getDuration() . ' minutes'
+                );
+
+                // 🔴 CONDITION DE CHEVAUCHEMENT
+                if ($start < $existingEnd && $end > $existingStart) {
+                    return new JsonResponse(
+                        ['error' => 'Ce créneau chevauche un rendez-vous existant'],
+                        Response::HTTP_CONFLICT
+                    );
+                }
+            }
+
+            // 🔹 CRÉATION DU RDV
+            $appointment = new Appointment();
+            $appointment->setDatetime($start);
+            $appointment->setService($service);
+            $appointment->setStaff($staff);
             $appointment->setFirstname($data['firstname']);
             $appointment->setLastname($data['lastname']);
             $appointment->setEmail($data['email']);
             $appointment->setPhone($data['phone']);
             $appointment->setCreatedAt(new \DateTimeImmutable());
-
-            // 🔹 CONFLIT (datetime + staff)
-            $existing = $this->entityManager->getRepository(Appointment::class)->findOneBy([
-                'datetime' => $datetime,
-                'staff' => $staff,
-            ]);
-
-            if ($existing) {
-                return new JsonResponse(
-                    ['error' => 'Créneau déjà réservé'],
-                    Response::HTTP_CONFLICT
-                );
-            }
 
             $this->entityManager->persist($appointment);
             $this->entityManager->flush();
