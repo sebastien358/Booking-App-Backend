@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Contact;
 use App\Form\ContactType;
+use App\Services\MailerProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,11 +18,13 @@ use Symfony\Component\Routing\Attribute\Route;
 class ContactController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
+    private MailerProvider $mailerProvider;
     private LoggerInterface $logger;
 
-    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $entityManager, MailerProvider $mailerProvider, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
+        $this->mailerProvider = $mailerProvider;
         $this->logger = $logger;
     }
 
@@ -40,6 +43,15 @@ class ContactController extends AbstractController
                 $errors = $this->getErrorMessages($form);
                 return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
             }
+
+            $body = $this->render('emails/contact-notification.html.twig', [
+                'name' => $data['firstname'],
+                'email' => $data['email'],
+                'message' => $data['message'],
+            ])->getContent();
+
+            $emailFrom = $this->getParameter('email_from');
+            $this->mailerProvider->sendEmail($emailFrom, 'Nouveau message via le formulaire de contact', $body);
 
             $this->entityManager->persist($contact);
             $this->entityManager->flush();
