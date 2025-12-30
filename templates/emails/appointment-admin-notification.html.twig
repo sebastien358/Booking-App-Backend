@@ -1,0 +1,11 @@
+<p>Bonjour,</p>
+<p>Vous avez reçu un nouveau message via le formulaire de prise de rendez-vous de votre salon de coiffure.</p>
+<p><strong>Informations du contact :</strong></p>
+<ul>
+    <li><strong>Prénom :</strong> {{ name }}</li>
+    <li><strong>Email :</strong> {{ email }}</li>
+    <li><strong>Date et heure du rendez-vous :</strong> {{ datetime|date('d/m/Y à H:i') }}</li>
+    <li><strong>Prestation :</strong> {{ prestation }}</li>
+</ul>
+<p>Bonne journée,</p>
+<p><em>Votre site de salon de coiffure</em></p>

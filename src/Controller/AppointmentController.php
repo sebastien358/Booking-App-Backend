@@ -6,6 +6,7 @@ use App\Entity\Appointment;
 use App\Entity\Service;
 use App\Entity\Staff;
 use App\Form\AppointmentType;
+use App\Services\MailerProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,11 +21,14 @@ use Symfony\Component\Serializer\SerializerInterface;
 class AppointmentController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
+    private MailerProvider $mailerProvider;
     private LoggerInterface $logger;
 
-    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger)
+    public function __construct(
+        EntityManagerInterface $entityManager, MailerProvider $mailerProvider, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
+        $this->mailerProvider = $mailerProvider;
         $this->logger = $logger;
     }
 
@@ -133,6 +137,24 @@ class AppointmentController extends AbstractController
             $appointment->setEmail($data['email']);
             $appointment->setPhone($data['phone']);
             $appointment->setCreatedAt(new \DateTimeImmutable());
+
+            // Notification admin
+            $bodyAdmin = $this->render('emails/appointment-admin-notification.html.twig', [
+                'name'        => $data['firstname'] . ' ' . $data['lastname'],
+                'email'       => $data['email'],
+                'prestation'  => $appointment->getService()->getName(),
+                'datetime'    => $data['datetime'],
+            ])->getContent();
+
+            $emailFrom = $this->getParameter('email_from');
+            $this->mailerProvider->sendEmail($emailFrom, 'Confirmation de votre message', $bodyAdmin);
+
+            // Notification client
+            $bodyClient = $this->render('emails/appointment-notification.html.twig', [
+                'prestation'  => $appointment->getService()->getName(),
+                'datetime'    => $data['datetime'],
+            ])->getContent();
+            $this->mailerProvider->sendEmail($data['email'], 'Confirmation de votre demande de rendez-vous', $bodyClient);
 
             $this->entityManager->persist($appointment);
             $this->entityManager->flush();

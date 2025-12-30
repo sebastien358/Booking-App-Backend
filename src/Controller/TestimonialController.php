@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Picture;
 use App\Entity\Testimonial;
 use App\Form\TestimonialType;
+use App\Services\MailerProvider;
 use App\Services\TestimonialService;
 use App\Services\UploadFileService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,15 +24,17 @@ class TestimonialController extends AbstractController
     private EntityManagerInterface $entityManager;
     private UploadFileService $uploadFileService;
     private TestimonialService $testimonialService;
+    private MailerProvider $mailerProvider;
     private LoggerInterface $logger;
 
     public function __construct(
         EntityManagerInterface $entityManager, UploadFileService $uploadFileService,
-        TestimonialService $testimonialService, LoggerInterface $logger)
+        TestimonialService $testimonialService, MailerProvider $mailerProvider, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
         $this->uploadFileService = $uploadFileService;
         $this->testimonialService = $testimonialService;
+        $this->mailerProvider = $mailerProvider;
         $this->logger = $logger;
     }
 
@@ -77,6 +80,14 @@ class TestimonialController extends AbstractController
 
                 $this->entityManager->persist($picture);
             }
+
+            $body = $this->render('emails/testimonial-notification.html.twig', [
+                'author' => $testimonial->getAuthor(),
+                'message' => $testimonial->getMessage()
+            ])->getContent();
+
+            $emailFrom = $this->getParameter('email_from');
+            $this->mailerProvider->sendEmail($emailFrom, 'Nouveau témoignage publié sur votre site', $body);
 
             $this->entityManager->persist($testimonial);
             $this->entityManager->flush();
