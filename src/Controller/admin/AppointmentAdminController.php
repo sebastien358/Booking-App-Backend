@@ -45,7 +45,6 @@ class AppointmentAdminController extends AbstractController
     {
         try {
             $search = $request->query->get('search');
-
             $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointmentsSearch($search);
 
             $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);

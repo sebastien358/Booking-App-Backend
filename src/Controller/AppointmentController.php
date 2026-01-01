@@ -36,7 +36,7 @@ class AppointmentController extends AbstractController
     public function list(SerializerInterface $serializer): JsonResponse
     {
         try {
-            $appointments = $this->entityManager->getRepository(Appointment::class)->findAllAppointments();
+            $appointments = $this->entityManager->getRepository(Appointment::class)->findAll();
 
             $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
             return new JsonResponse($dataAppointments);
