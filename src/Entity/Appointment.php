@@ -18,7 +18,11 @@ class Appointment
 
     #[ORM\Column]
     #[Groups(['appointments', 'appointment'])]
-    private ?\DateTimeImmutable $datetime = null;
+    private ?\DateTimeImmutable $startAt = null;
+
+    #[ORM\Column]
+    #[Groups(['appointments', 'appointment'])]
+    private ?\DateTimeImmutable $endAt = null;
 
     #[ORM\Column(length: 125)]
     #[Groups(['appointments', 'appointment'])]
@@ -65,14 +69,26 @@ class Appointment
         return $this->id;
     }
 
-    public function getDatetime(): ?\DateTimeImmutable
+    public function getStartAt(): ?\DateTimeImmutable
     {
-        return $this->datetime;
+        return $this->startAt;
     }
 
-    public function setDatetime(\DateTimeImmutable $datetime): static
+    public function setStartAt(\DateTimeImmutable $startAt): self
     {
-        $this->datetime = $datetime;
+        $this->startAt = $startAt;
+
+        return $this;
+    }
+
+    public function getEndAt(): ?\DateTimeImmutable
+    {
+        return $this->endAt;
+    }
+
+    public function setEndAt(\DateTimeImmutable $endAt): self
+    {
+        $this->endAt = $endAt;
 
         return $this;
     }

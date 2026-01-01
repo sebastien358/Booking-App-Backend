@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Appointment;
+use App\Entity\Staff;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,20 @@ class AppointmentRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Appointment::class);
+    }
+
+    public function findForStaffBetween(Staff $staff, \DateTimeImmutable $start, \DateTimeImmutable $end
+    ): array {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.staff = :staff')
+            ->andWhere('a.startAt < :end')
+            ->andWhere('a.endAt > :start')
+            ->setParameter('staff', $staff)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('a.startAt', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function findAllAppointments(int $limit, int $offset)

@@ -46,28 +46,74 @@ class AppointmentController extends AbstractController
         }
     }
 
-    #[Route('/calendar', methods: ['GET'])]
-    public function calendar(): JsonResponse
+    #[Route('/slots', methods: ['GET'])]
+    public function slots(Request $request): JsonResponse
     {
+        $date = $request->query->get('date'); // 2026-01-01
+        $categoryId = (int) $request->query->get('categoryId');
+        $serviceId  = (int) $request->query->get('serviceId');
+        $staffId    = (int) $request->query->get('staffId');
+
+        if (!$date || !$categoryId || !$serviceId || !$staffId) {
+            return $this->json([]);
+        }
+
+        $staff = $this->entityManager->getRepository(Staff::class)->find($staffId);
+        $service = $this->entityManager->getRepository(Service::class)->find($serviceId);
+
+        if (!$staff || !$service || $service->getCategory()->getId() !== $categoryId) {
+            return $this->json([]);
+        }
+
+        $duration = $service->getDuration(); // minutes
+
+        // ✅ FUSEAU HORAIRE UNIQUE
+        $tz = new \DateTimeZone('Europe/Paris');
+
+        $dayStart = new \DateTimeImmutable($date . ' 09:00:00', $tz);
+        $dayEnd = new \DateTimeImmutable($date . ' 19:00:00', $tz);
+        $now = new \DateTimeImmutable('now', $tz);
+
+        $isToday = $dayStart->format('Y-m-d') === $now->format('Y-m-d');
+
         $appointments = $this->entityManager
             ->getRepository(Appointment::class)
-            ->findAll();
+            ->findForStaffBetween($staff, $dayStart, $dayEnd);
 
-        $data = array_map(function (Appointment $a) {
+        $slots = [];
 
-            $start = $a->getDatetime();
-            $duration = $a->getService()->getDuration(); // minutes
-            $end = $start->modify("+{$duration} minutes");
+        for ($t = $dayStart; $t < $dayEnd; $t = $t->modify('+15 minutes')) {
 
-            return [
-                'id' => $a->getId(),
-                'start' => $start->format('c'),
-                'end' => $end->format('c'),
-                'staffId' => $a->getStaff()->getId(),
-            ];
-        }, $appointments);
+            $startAt = $t;
+            $endAt   = $t->modify("+{$duration} minutes");
 
-        return $this->json($data);
+            // ⛔ Bloquer les créneaux passés aujourd’hui
+            if ($isToday && $startAt <= $now) {
+                continue;
+            }
+
+            if ($endAt > $dayEnd) {
+                break;
+            }
+
+            $blocked = false;
+            foreach ($appointments as $a) {
+                if ($startAt < $a->getEndAt() && $endAt > $a->getStartAt()) {
+                    $blocked = true;
+                    break;
+                }
+            }
+
+            if (!$blocked) {
+                $slots[] = [
+                    'start' => $startAt->format('c'),
+                    'end'   => $endAt->format('c'),
+                    'label' => $startAt->format('H:i'),
+                ];
+            }
+        }
+
+        return $this->json($slots);
     }
 
     #[Route('/create', methods: ['POST'])]
