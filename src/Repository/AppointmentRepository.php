@@ -17,15 +17,18 @@ class AppointmentRepository extends ServiceEntityRepository
         parent::__construct($registry, Appointment::class);
     }
 
-    public function findForStaffBetween(Staff $staff, \DateTimeImmutable $start, \DateTimeImmutable $end): array {
+    public function findForStaffBetween(
+        Staff $staff,
+        \DateTimeImmutable $dayStart,
+        \DateTimeImmutable $dayEnd
+    ): array {
         return $this->createQueryBuilder('a')
             ->andWhere('a.staff = :staff')
-            ->andWhere('a.startAt < :end')
-            ->andWhere('a.endAt > :start')
+            ->andWhere('a.startAt < :dayEnd')
+            ->andWhere('a.endAt > :dayStart')
             ->setParameter('staff', $staff)
-            ->setParameter('start', $start)
-            ->setParameter('end', $end)
-            ->orderBy('a.startAt', 'ASC')
+            ->setParameter('dayStart', $dayStart)
+            ->setParameter('dayEnd', $dayEnd)
             ->getQuery()
             ->getResult();
     }
