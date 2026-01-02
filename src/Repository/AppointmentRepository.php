@@ -17,8 +17,7 @@ class AppointmentRepository extends ServiceEntityRepository
         parent::__construct($registry, Appointment::class);
     }
 
-    public function findForStaffBetween(Staff $staff, \DateTimeImmutable $start, \DateTimeImmutable $end
-    ): array {
+    public function findForStaffBetween(Staff $staff, \DateTimeImmutable $start, \DateTimeImmutable $end): array {
         return $this->createQueryBuilder('a')
             ->andWhere('a.staff = :staff')
             ->andWhere('a.startAt < :end')
@@ -29,6 +28,19 @@ class AppointmentRepository extends ServiceEntityRepository
             ->orderBy('a.startAt', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function hasConflict(Staff $staff, \DateTimeImmutable $start, \DateTimeImmutable $end): bool {
+        return (bool) $this->createQueryBuilder('a')
+            ->andWhere('a.staff = :staff')
+            ->andWhere('a.startAt < :end')
+            ->andWhere('a.endAt > :start')
+            ->setParameter('staff', $staff)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     public function findAllAppointments(int $limit, int $offset)

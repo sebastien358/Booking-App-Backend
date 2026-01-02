@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Appointment;
 use App\Entity\Service;
 use App\Entity\Staff;
-use App\Form\AppointmentType;
 use App\Services\MailerProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,10 +48,10 @@ class AppointmentController extends AbstractController
     #[Route('/slots', methods: ['GET'])]
     public function slots(Request $request): JsonResponse
     {
-        $date = $request->query->get('date'); // 2026-01-01
+        $date = $request->query->get('date');
         $categoryId = (int) $request->query->get('categoryId');
-        $serviceId  = (int) $request->query->get('serviceId');
-        $staffId    = (int) $request->query->get('staffId');
+        $serviceId = (int) $request->query->get('serviceId');
+        $staffId = (int) $request->query->get('staffId');
 
         if (!$date || !$categoryId || !$serviceId || !$staffId) {
             return $this->json([]);
@@ -117,99 +116,62 @@ class AppointmentController extends AbstractController
     }
 
     #[Route('/create', methods: ['POST'])]
-    public function add(Request $request): JsonResponse
+    public function create(Request $request): JsonResponse
     {
-        try {
-            $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode($request->getContent(), true);
 
-            if (empty($data['datetime'])) {
-                return new JsonResponse(['error' => 'datetime manquant'], 400);
-            }
-
-            $start = new \DateTimeImmutable($data['datetime']);
-
-            // 🔹 SERVICE
-            $service = $this->entityManager
-                ->getRepository(Service::class)
-                ->find($data['service_id']);
-
-            if (!$service) {
-                return new JsonResponse(['error' => 'Service inexistant'], 400);
-            }
-
-            $duration = $service->getDuration(); // en minutes
-            $end = $start->modify("+{$duration} minutes");
-
-            // 🔹 STAFF
-            $staff = $this->entityManager
-                ->getRepository(Staff::class)
-                ->find($data['staff_id']);
-
-            if (!$staff) {
-                return new JsonResponse(['error' => 'Staff inexistant'], 400);
-            }
-
-            // 🔹 RECHERCHE DES RDV EXISTANTS DU STAFF
-            $qb = $this->entityManager->getRepository(Appointment::class)->createQueryBuilder('a');
-
-            $appointments = $qb
-                ->where('a.staff = :staff')
-                ->setParameter('staff', $staff)
-                ->getQuery()
-                ->getResult();
-
-            foreach ($appointments as $existing) {
-                $existingStart = $existing->getDatetime();
-                $existingEnd = $existingStart->modify(
-                    '+' . $existing->getService()->getDuration() . ' minutes'
-                );
-
-                // 🔴 CONDITION DE CHEVAUCHEMENT
-                if ($start < $existingEnd && $end > $existingStart) {
-                    return new JsonResponse(
-                        ['error' => 'Ce créneau chevauche un rendez-vous existant'],
-                        Response::HTTP_CONFLICT
-                    );
-                }
-            }
-
-            // 🔹 CRÉATION DU RDV
-            $appointment = new Appointment();
-            $appointment->setDatetime($start);
-            $appointment->setService($service);
-            $appointment->setStaff($staff);
-            $appointment->setFirstname($data['firstname']);
-            $appointment->setLastname($data['lastname']);
-            $appointment->setEmail($data['email']);
-            $appointment->setPhone($data['phone']);
-            $appointment->setCreatedAt(new \DateTimeImmutable());
-
-            // Notification admin
-            $bodyAdmin = $this->render('emails/appointment-admin-notification.html.twig', [
-                'name'        => $data['firstname'] . ' ' . $data['lastname'],
-                'email'       => $data['email'],
-                'prestation'  => $appointment->getService()->getName(),
-                'datetime'    => $data['datetime'],
-            ])->getContent();
-
-            $emailFrom = $this->getParameter('email_from');
-            $this->mailerProvider->sendEmail($emailFrom, 'Confirmation de votre message', $bodyAdmin);
-
-            // Notification client
-            $bodyClient = $this->render('emails/appointment-notification.html.twig', [
-                'prestation'  => $appointment->getService()->getName(),
-                'datetime'    => $data['datetime'],
-            ])->getContent();
-            $this->mailerProvider->sendEmail($data['email'], 'Confirmation de votre demande de rendez-vous', $bodyClient);
-
-            $this->entityManager->persist($appointment);
-            $this->entityManager->flush();
-
-            return new JsonResponse(['message' => 'Rendez-vous créé'], 201);
-
-        } catch (\Throwable $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
+        if (
+            empty($data['datetime']) ||
+            empty($data['service_id']) ||
+            empty($data['staff_id'])
+        ) {
+            return $this->json(['error' => 'Données manquantes'], 400);
         }
+
+        $tz = new \DateTimeZone('Europe/Paris');
+        $start = new \DateTimeImmutable($data['datetime'], $tz);
+
+        // Service
+        $service = $this->entityManager->getRepository(Service::class)->find($data['service_id']);
+        if (!$service) {
+            return $this->json(['error' => 'Service invalide'], 400);
+        }
+
+        $end = $start->modify('+' . $service->getDuration() . ' minutes');
+
+        // Staff
+        $staff = $this->entityManager->getRepository(Staff::class)->find($data['staff_id']);
+        if (!$staff) {
+            return $this->json(['error' => 'Staff invalide'], 400);
+        }
+
+        // 🔒 BLOCAGE DES DOUBLONS
+        $conflict = $this->entityManager
+            ->getRepository(Appointment::class)
+            ->hasConflict($staff, $start, $end);
+
+        if ($conflict) {
+            return $this->json(
+                ['error' => 'Ce créneau est déjà réservé'],
+                409
+            );
+        }
+
+        // Création
+        $appointment = new Appointment();
+        $appointment->setStartAt($start);
+        $appointment->setEndAt($end);
+        $appointment->setService($service);
+        $appointment->setStaff($staff);
+        $appointment->setFirstname($data['firstname']);
+        $appointment->setLastname($data['lastname']);
+        $appointment->setEmail($data['email']);
+        $appointment->setPhone($data['phone']);
+
+        $this->entityManager->persist($appointment);
+        $this->entityManager->flush();
+
+        return $this->json(['message' => 'Rendez-vous confirmé'], 201);
     }
 
     private function getErrorMessages(FormInterface $form): array
