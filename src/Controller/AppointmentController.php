@@ -48,16 +48,16 @@ class AppointmentController extends AbstractController
     #[Route('/slots', methods: ['GET'])]
     public function slots(Request $request): JsonResponse
     {
-        $date       = $request->query->get('date'); // YYYY-MM-DD
+        $date = $request->query->get('date'); // YYYY-MM-DD
         $categoryId = (int) $request->query->get('categoryId');
-        $serviceId  = (int) $request->query->get('serviceId');
-        $staffId    = (int) $request->query->get('staffId');
+        $serviceId = (int) $request->query->get('serviceId');
+        $staffId = (int) $request->query->get('staffId');
 
         if (!$date || !$categoryId || !$serviceId || !$staffId) {
             return $this->json([]);
         }
 
-        $staff   = $this->entityManager->getRepository(Staff::class)->find($staffId);
+        $staff = $this->entityManager->getRepository(Staff::class)->find($staffId);
         $service = $this->entityManager->getRepository(Service::class)->find($serviceId);
 
         if (!$staff || !$service || $service->getCategory()->getId() !== $categoryId) {
@@ -65,14 +65,14 @@ class AppointmentController extends AbstractController
         }
 
         $tzParis = new \DateTimeZone('Europe/Paris');
-        $tzUtc   = new \DateTimeZone('UTC');
+        $tzUtc = new \DateTimeZone('UTC');
 
         $duration = (int) $service->getDuration();
 
         $dayStartParis = new \DateTimeImmutable("$date 09:00:00", $tzParis);
-        $dayEndParis   = new \DateTimeImmutable("$date 21:00:00", $tzParis);
-        $nowParis      = new \DateTimeImmutable('now', $tzParis);
-        $isToday       = $dayStartParis->format('Y-m-d') === $nowParis->format('Y-m-d');
+        $dayEndParis = new \DateTimeImmutable("$date 19:00:00", $tzParis);
+        $nowParis = new \DateTimeImmutable('now', $tzParis);
+        $isToday = $dayStartParis->format('Y-m-d') === $nowParis->format('Y-m-d');
 
         // RDV du staff sur la journée (stockés en UTC)
         $appointments = $this->entityManager
@@ -100,7 +100,7 @@ class AppointmentController extends AbstractController
 
             // ✅ compare en UTC
             $slotStartUtc = $slotStartParis->setTimezone($tzUtc);
-            $slotEndUtc   = $slotEndParis->setTimezone($tzUtc);
+            $slotEndUtc = $slotEndParis->setTimezone($tzUtc);
 
             $blocked = false;
             foreach ($appointments as $a) {
