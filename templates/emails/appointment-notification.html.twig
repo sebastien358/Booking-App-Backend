@@ -1,10 +1,18 @@
-<p>Bonjour,</p>
-<p>Nous avons bien reçu votre demande de rendez-vous dans notre salon de coiffure.</p>
-<ul>
-    <li><strong>Prestation :</strong> {{ prestation }}</li>
-    <li><strong>Date et heure :</strong> {{ datetime|date('d/m/Y à H:i') }}</li>
-</ul>
-<p>Nous vous recontacterons si nécessaire pour confirmer ou ajuster ce rendez-vous.</p>
+<p>Bonjour {{ name }},</p>
 
-<p>À bientôt,<br>
-    <strong>Votre salon de coiffure</strong></p>
+<p>Votre rendez-vous a bien été confirmé.</p>
+
+<ul>
+    <li><strong>Date et heure :</strong> {{ datetime|date('d/m/Y à H:i') }}</li>
+    <li><strong>Prestation :</strong> {{ prestation }}</li>
+</ul>
+
+<p>
+    Nous vous attendons au salon.<br>
+    En cas d’empêchement, merci de nous prévenir à l’avance.
+</p>
+
+<p>
+    À très bientôt,<br>
+    <strong>Votre salon de coiffure</strong>
+</p>

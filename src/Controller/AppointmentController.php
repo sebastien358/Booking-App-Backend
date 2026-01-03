@@ -196,6 +196,27 @@ class AppointmentController extends AbstractController
         $appointment->setEmail($data['email']);
         $appointment->setPhone($data['phone']);
 
+        $startParis = $startUtc->setTimezone(new \DateTimeZone('Europe/Paris'));
+
+        // NOTIFICATION ADMIN
+        $bodyAdmin = $this->render('emails/appointment-admin-notification.html.twig', [
+            'name' => $data['firstname'] . ' ' . $data['lastname'],
+            'email' => $data['email'],
+            'datetime' => $startParis,
+            'prestation' => $appointment->getService()->getName()
+        ])->getContent();
+
+        $this->mailerProvider->sendEmail($this->getParameter('email_from'), 'Nouveau rendez-vous en ligne', $bodyAdmin);
+
+        // NOTIFICATION CLIENT
+        $bodyClient = $this->render('emails/appointment-notification.html.twig', [
+            'name' => $data['firstname'] . ' ' . $data['lastname'],
+            'datetime' => $startParis,
+            'prestation' => $appointment->getService()->getName()
+        ])->getContent();
+
+        $this->mailerProvider->sendEmail($data['email'], 'Confirmation de votre rendez-vous', $bodyClient);
+
         $this->entityManager->persist($appointment);
         $this->entityManager->flush();
 
