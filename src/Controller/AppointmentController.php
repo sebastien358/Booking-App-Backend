@@ -91,6 +91,14 @@ class AppointmentController extends AbstractController
                 continue;
             }
 
+            // 2️⃣ ⛔ PAUSE DÉJEUNER (ICI)
+            $pauseStart = new \DateTimeImmutable("$date 12:00:00", $tzParis);
+            $pauseEnd   = new \DateTimeImmutable("$date 14:00:00", $tzParis);
+
+            if ($slotStartParis >= $pauseStart && $slotStartParis < $pauseEnd) {
+                continue;
+            }
+
             $slotEndParis = $slotStartParis->modify("+{$duration} minutes");
 
             // si le service dépasse la fin de journée → on ignore CE créneau
@@ -104,7 +112,6 @@ class AppointmentController extends AbstractController
 
             $blocked = false;
             foreach ($appointments as $a) {
-                // a->getStartAt() / getEndAt() supposés UTC
                 if ($slotStartUtc < $a->getEndAt() && $slotEndUtc > $a->getStartAt()) {
                     $blocked = true;
                     break;
@@ -122,21 +129,17 @@ class AppointmentController extends AbstractController
             ];
         }
 
-        return $this->json($slots);
+        return $this->json($slots, Response::HTTP_OK);
     }
 
 
     #[Route('/create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        if (
-            empty($data['datetime']) ||
-            empty($data['service_id']) ||
-            empty($data['staff_id'])
-        ) {
-            return $this->json(['error' => 'Données manquantes'], 400);
+        if (empty($data['datetime']) || empty($data['service_id']) || empty($data['staff_id'])) {
+            return $this->json(['error' => 'Données manquantes'], Response::HTTP_BAD_REQUEST);
         }
 
         // 🔒 FUSEAUX
@@ -146,43 +149,28 @@ class AppointmentController extends AbstractController
         try {
             $startUtc = (new \DateTimeImmutable($data['datetime']))->setTimezone($tzUtc);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Datetime invalide'], 400);
+            return $this->json(['error' => 'Datetime invalide'], Response::HTTP_BAD_REQUEST);
         }
 
         // 🔹 SERVICE
-        $service = $this->entityManager
-            ->getRepository(Service::class)
-            ->find($data['service_id']);
-
+        $service = $this->entityManager->getRepository(Service::class)->find($data['service_id']);
         if (!$service) {
-            return $this->json(['error' => 'Service invalide'], 400);
+            return $this->json(['error' => 'Service invalide'], Response::HTTP_BAD_REQUEST);
         }
 
         $duration = (int) $service->getDuration(); // minutes
         $endUtc = $startUtc->modify("+{$duration} minutes");
 
         // 🔹 STAFF
-        $staff = $this->entityManager
-            ->getRepository(Staff::class)
-            ->find($data['staff_id']);
-
+        $staff = $this->entityManager->getRepository(Staff::class)->find($data['staff_id']);
         if (!$staff) {
-            return $this->json(['error' => 'Staff invalide'], 400);
+            return $this->json(['error' => 'Staff invalide'], Response::HTTP_BAD_REQUEST);
         }
 
         // 🔒 BLOCAGE DES DOUBLONS (UTC vs UTC)
-        $conflict = $this->entityManager
-            ->getRepository(Appointment::class)
-            ->hasConflict($staff, $startUtc, $endUtc);
-
+        $conflict = $this->entityManager->getRepository(Appointment::class)->hasConflict($staff, $startUtc, $endUtc);
         if ($conflict) {
-            return $this->json(
-                [
-                    'type' => 'DATETIME_ALREADY_TAKEN',
-                    'message' => 'Ce créneau est déjà réservé'
-                ],
-                Response::HTTP_CONFLICT
-            );
+            return $this->json(['type' => 'DATETIME_ALREADY_TAKEN', 'message' => 'Ce créneau est déjà réservé'], Response::HTTP_CONFLICT);
         }
 
         // ✅ CRÉATION
@@ -220,7 +208,7 @@ class AppointmentController extends AbstractController
         $this->entityManager->persist($appointment);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'Rendez-vous confirmé'], 201);
+        return $this->json(['message' => 'Rendez-vous confirmé'], Response::HTTP_CREATED);
     }
 
 
