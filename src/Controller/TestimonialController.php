@@ -92,7 +92,16 @@ class TestimonialController extends AbstractController
             $this->entityManager->persist($testimonial);
             $this->entityManager->flush();
 
-            return new JsonResponse(['success' => true, 'message' => 'Témoignage envoyé'], Response::HTTP_CREATED);
+            return new JsonResponse([
+                'id' => $testimonial->getId(),
+                'author' => $testimonial->getAuthor(),
+                'job' => $testimonial->getJob(),
+                'rating' => $testimonial->getRating(),
+                'message' => $testimonial->getMessage(),
+                'picture' => $testimonial->getPicture() ? [
+                    'filename' => $testimonial->getPicture()->getFilename(),
+                ] : null,
+            ], Response::HTTP_CREATED);
         } catch(\Throwable $e) {
             $this->logger->error('Error le témoignage n\'a pas pu etre envoyé', [$e->getMessage()]);
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);

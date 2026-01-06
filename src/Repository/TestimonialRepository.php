@@ -22,7 +22,7 @@ class TestimonialRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('t')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
-            ->orderBy('t.id', 'DESC')
+            ->orderBy('t.id', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -32,7 +32,7 @@ class TestimonialRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->where('c.author LIKE :search')
             ->setParameter('search', '%' . $search . '%')
-            ->orderBy('c.id', 'DESC')
+            ->orderBy('c.id', 'ASC')
             ->getQuery()
             ->getResult();
     }

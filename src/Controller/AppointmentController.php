@@ -31,19 +31,19 @@ class AppointmentController extends AbstractController
         $this->logger = $logger;
     }
 
-    #[Route('/list', methods: ['GET'])]
-    public function list(SerializerInterface $serializer): JsonResponse
-    {
-        try {
-            $appointments = $this->entityManager->getRepository(Appointment::class)->findAll();
-
-            $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
-            return new JsonResponse($dataAppointments);
-        } catch(\Throwable $e) {
-            $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+//    #[Route('/list', methods: ['GET'])]
+//    public function list(SerializerInterface $serializer): JsonResponse
+//    {
+//        try {
+//            $appointments = $this->entityManager->getRepository(Appointment::class)->findAll();
+//
+//            $dataAppointments = $serializer->normalize($appointments, 'json', ['groups' => ['appointments']]);
+//            return new JsonResponse($dataAppointments);
+//        } catch(\Throwable $e) {
+//            $this->logger->error('Erreur liste des rendez-vous clients : ', [$e->getMessage()]);
+//            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     #[Route('/slots', methods: ['GET'])]
     public function slots(Request $request): JsonResponse
@@ -98,7 +98,7 @@ class AppointmentController extends AbstractController
 
             // ⛔ pause déjeuner
             $pauseStart = new \DateTimeImmutable("$date 12:00:00", $tzParis);
-            $pauseEnd   = new \DateTimeImmutable("$date 14:00:00", $tzParis);
+            $pauseEnd = new \DateTimeImmutable("$date 14:00:00", $tzParis);
 
             if ($slotStartParis >= $pauseStart && $slotStartParis < $pauseEnd) {
                 continue;
