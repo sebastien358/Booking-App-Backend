@@ -14,15 +14,37 @@ class ServiceFixtures extends Fixture implements DependentFixtureInterface
     {
         $services = [
             CategoryFixtures::HOMME => [
-                ['name' => 'Coupe homme', 'price' => '20', 'duration' => 30],
-                ['name' => 'Barbe', 'price' => '15', 'duration' => 20],
+                [
+                    'name' => 'Séance de gestion du stress',
+                    'price' => 50,
+                    'duration' => 60,
+                ],
+                [
+                    'name' => 'Accompagnement bien-être',
+                    'price' => 60,
+                    'duration' => 75,
+                ],
             ],
+
             CategoryFixtures::FEMME => [
-                ['name' => 'Coupe femme', 'price' => '35', 'duration' => 45],
-                ['name' => 'Brushing', 'price' => '25', 'duration' => 30],
+                [
+                    'name' => 'Accompagnement émotionnel',
+                    'price' => 60,
+                    'duration' => 75,
+                ],
+                [
+                    'name' => 'Développement personnel',
+                    'price' => 70,
+                    'duration' => 90,
+                ],
             ],
+
             CategoryFixtures::ENFANT => [
-                ['name' => 'Coupe enfant', 'price' => '15', 'duration' => 20],
+                [
+                    'name' => 'Accompagnement junior',
+                    'price' => 45,
+                    'duration' => 45,
+                ],
             ],
         ];
 
