@@ -8,16 +8,20 @@ use Doctrine\Persistence\ObjectManager;
 
 class CategoryFixtures extends Fixture
 {
-    public const HOMME = 'category_homme';
-    public const FEMME = 'category_femme';
-    public const ENFANT = 'category_enfant';
+    public const CABINET = 'category_cabinet';
+    public const VISIO = 'category_visio';
 
     public function load(ObjectManager $manager): void
     {
         $categories = [
-            self::HOMME => ['name' => 'Homme', 'slug' => 'homme'],
-            self::FEMME => ['name' => 'Femme', 'slug' => 'femme'],
-            self::ENFANT => ['name' => 'Enfant', 'slug' => 'enfant'],
+            self::CABINET => [
+                'name' => 'Au cabinet',
+                'slug' => 'au-cabinet'
+            ],
+            self::VISIO => [
+                'name' => 'En visio',
+                'slug' => 'en-visio'
+            ],
         ];
 
         foreach ($categories as $ref => $data) {
@@ -27,7 +31,7 @@ class CategoryFixtures extends Fixture
 
             $manager->persist($category);
 
-            // 🔴 LIGNE CRUCIALE
+            // référence pour les ServiceFixtures
             $this->addReference($ref, $category);
         }
 
